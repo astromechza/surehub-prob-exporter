@@ -1,5 +1,5 @@
 - uri: template://custom/env
-  type: env
-  outputs:
+  type: environment
+  outputs: |
     SUREHUB_EMAIL: {{ encodeSecretRef "surehub-credential" "email" }}
     SUREHUB_PASSWORD: {{ encodeSecretRef "surehub-credential" "email" }}

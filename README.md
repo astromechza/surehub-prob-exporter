@@ -37,7 +37,7 @@ spec:
       app.kubernetes.io/name: surehub-prom-exporter
       app.kubernetes.io/managed-by: score-k8s
   endpoints:
-    - port: 8080
+    - port: web
       path: /metrics
       relabelings:
       - regex: pod

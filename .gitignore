@@ -21,3 +21,4 @@
 go.work
 .score-k8s/state.yaml
 .score-k8s/zz-default.provisioners.yaml
+manifests.yaml
