@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math"
 	"net/http"
 	"os"
 	"slices"
@@ -253,6 +254,7 @@ func (p *Poller) processTimelineItem(ctx context.Context, item client.TimelineRe
 		dev := devicesById[ref.DerefOrZero(wht.DeviceId)]
 		for _, bowl := range ref.DerefOrZero(wht.Frames) {
 			if chg := ref.DerefOrZero(bowl.Change); chg != 0 {
+				chg := math.Abs(float64(chg))
 				labels := map[string]string{
 					"device_id":   strconv.Itoa(ref.DerefOrDefault(dev.Id, 0)),
 					"device_name": ref.DerefOrDefault(dev.Name, "unnamed"),
@@ -267,7 +269,7 @@ func (p *Poller) processTimelineItem(ctx context.Context, item client.TimelineRe
 				if c, err := ensureCounter("weight_change", labels); err != nil {
 					return err
 				} else {
-					c.Add(float64(chg))
+					c.Add(chg)
 				}
 			}
 		}
