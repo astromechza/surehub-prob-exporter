@@ -52,5 +52,18 @@ spec:
 ### Example Prometheus metrics
 
 ```
-TODO
+# HELP surehub_device_battery 
+# TYPE surehub_device_battery gauge
+surehub_device_battery{device_id="1234567",device_name="Feeder"} 5.19
+# HELP surehub_device_last_event_at_seconds 
+# TYPE surehub_device_last_event_at_seconds gauge
+surehub_device_last_event_at_seconds{device_id="1234567",device_name="Feeder"} 1.71605162e+09
+surehub_device_last_event_at_seconds{device_id="7654321",device_name="Hub"} 1.71605162e+09
+# HELP surehub_device_online 
+# TYPE surehub_device_online gauge
+surehub_device_online{device_id="1234567",device_name="Feeder"} 1
+surehub_device_online{device_id="7654321",device_name="Hub"} 1
+# HELP surehub_weight_change 
+# TYPE surehub_weight_change counter
+surehub_weight_change{device_id="1234567",device_name="Feeder",event_type="EAT",pet_id="98765",pet_name="Garfield"} 11
 ```

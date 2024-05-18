@@ -8,7 +8,6 @@ import (
 	"math"
 	"net/http"
 	"os"
-	"slices"
 	"strconv"
 	"time"
 
@@ -132,7 +131,7 @@ func (p *Poller) poll(ctx context.Context) error {
 	} else if listDevResp.StatusCode() != http.StatusOK {
 		return fmt.Errorf("unexpected status code when listing devices: %d %s", listDevResp.StatusCode(), string(listDevResp.Body))
 	}
-	for _, resource := range *listDevResp.JSON200.Data {
+	for _, resource := range ref.DerefOrZero(listDevResp.JSON200.Data) {
 		if err := p.processDevice(ctx, resource); err != nil {
 			return fmt.Errorf("error while polling device: %w", err)
 		}
@@ -148,22 +147,19 @@ func (p *Poller) poll(ctx context.Context) error {
 	} else if timelineData.StatusCode() != http.StatusOK {
 		return fmt.Errorf("unexpected status code when listing timeline: %d %s", timelineData.StatusCode(), string(timelineData.Body))
 	}
-	timelineItems := *timelineData.JSON200.Data
+	timelineItems := ref.DerefOrZero(timelineData.JSON200.Data)
 	if len(timelineItems) > 0 {
-		if p.lastTimelineId == 0 {
-			if timelineItems[0].Id != nil {
-				p.lastTimelineId = *timelineItems[0].Id
-				slog.Info("set initial last timeline id", "id", p.lastTimelineId)
-			}
-		} else {
-			slices.Reverse(timelineItems)
+		if p.lastTimelineId > 0 {
 			for _, item := range timelineItems {
 				if err := p.processTimelineItem(ctx, item); err != nil {
 					return fmt.Errorf("failed to poll timeline item: %w", err)
 				}
 			}
-			p.lastTimelineId = *timelineItems[0].Id
 			slog.Info("processed items and set new last timeline id", "#items", len(timelineItems), "id", p.lastTimelineId)
+		}
+		if timelineItems[0].Id != nil {
+			p.lastTimelineId = *timelineItems[0].Id
+			slog.Info("set last timeline id", "id", p.lastTimelineId)
 		}
 	}
 
