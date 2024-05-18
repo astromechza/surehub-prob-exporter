@@ -4,6 +4,8 @@ A Prometheus exporter for data from the SurePet surehub.io API documented by thi
 
 I built this in order to pull data from my <https://www.surepetcare.com/en-gb/pet-feeder> to track when and how much my two cats are eating and push it into my Prometheus and Grafana stack. I wish I could have got the data out directly from the hub locally instead of bouncing it through the cloud API but the device firmwares are fairly locked down at this point. 
 
+![arrows](arrows.drawio.png)
+
 The container image is published to `ghcr.io/astromechza/surehub-prom-exporter:main`.
 
 ### Endpoints on port `8080`
