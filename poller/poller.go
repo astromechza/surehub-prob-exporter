@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"time"
 
@@ -150,17 +151,18 @@ func (p *Poller) poll(ctx context.Context) error {
 	timelineItems := ref.DerefOrZero(timelineData.JSON200.Data)
 	if len(timelineItems) > 0 {
 		if p.lastTimelineId > 0 {
+			slices.Reverse(timelineItems)
 			for _, item := range timelineItems {
 				if err := p.processTimelineItem(ctx, item); err != nil {
 					return fmt.Errorf("failed to poll timeline item: %w", err)
 				}
+				p.lastTimelineId = *item.Id
 			}
 			slog.Info("processed items and set new last timeline id", "#items", len(timelineItems), "id", p.lastTimelineId)
-		}
-		if timelineItems[0].Id != nil {
+		} else {
 			p.lastTimelineId = *timelineItems[0].Id
-			slog.Info("set last timeline id", "id", p.lastTimelineId)
 		}
+		slog.Info("set last timeline id", "id", p.lastTimelineId)
 	}
 
 	return nil
@@ -255,6 +257,8 @@ func (p *Poller) processTimelineItem(ctx context.Context, item client.TimelineRe
 					"device_id":   strconv.Itoa(ref.DerefOrDefault(dev.Id, 0)),
 					"device_name": ref.DerefOrDefault(dev.Name, "unnamed"),
 					"event_type":  eventType[ref.DerefOrZero(item.Type)],
+					"pet_id":      "",
+					"pet_name":    "",
 				}
 				pets := ref.DerefOrZero(item.Pets)
 				if len(pets) > 0 {
