@@ -8,16 +8,30 @@ I built this in order to pull data from my <https://www.surepetcare.com/en-gb/pe
 
 The container image is published to `ghcr.io/astromechza/surehub-prom-exporter:main`.
 
+### Usage
+
+```
+Poll the surehub api on an interval and expose the data regarding device and food changes over a prometheus metrics endpoint.
+
+You MUST configure the SUREHUB_EMAIL and SUREHUB_PASSWORD environment variables for authentication.
+
+See more at https://github.com/astromechza/surehub-prom-exporter.
+
+Usage:
+  surehub-prom-exporter [flags]
+
+Flags:
+      --address string      the address to listen on (default ":8080")
+  -h, --help                help for surehub-prom-exporter
+      --interval duration   the interval to poll at (default 1m0s)
+  -v, --verbose count       increase log verbosity and detail by specifying this flag one or more times
+```
+
 ### Endpoints on port `8080`
 
 - `/metrics` - the Prometheus endpoint
 - `/alive` - liveness probe (is the web server running)
 - `/ready` - readiness probe (did the last surehub poll succeed)
-
-### Required environment variables
-
-- `SUREHUB_EMAIL` - the email address you use to login to <https://surehub.io>
-- `SUREHUB_PASSWORD` - the password you use to login to <https://surehub.io>
 
 When deployed through the Score file to Kubernetes using `score-k8s` it is assumed that you have a secret named `surehub-credential` with `email` and `password` keys in it.
 

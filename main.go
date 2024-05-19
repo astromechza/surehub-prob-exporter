@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -18,14 +17,28 @@ import (
 	"github.com/astromechza/surehub-prob-exporter/poller"
 )
 
-const defaultAddress = ":8080"
-const defaultHubApi = "https://app.api.surehub.io"
+const (
+	defaultAddress      = ":8080"
+	defaultInterval     = time.Minute
+	defaultHubApi       = "https://app.api.surehub.io"
+	rootCmdVerboseFlag  = "verbose"
+	rootCmdAddressFlag  = "address"
+	rootCmdIntervalFlag = "interval"
+	emailEnvVar         = "SUREHUB_EMAIL"
+	emailPasswordVar    = "SUREHUB_PASSWORD"
+)
 
 var rootCmd = &cobra.Command{
 	Use: "surehub-prom-exporter",
+	Long: fmt.Sprintf(`Poll the surehub api on an interval and expose the data regarding device and food changes over a prometheus metrics endpoint.
+
+You MUST configure the %s and %s environment variables for authentication.
+
+See more at https://github.com/astromechza/surehub-prom-exporter.
+`, emailEnvVar, emailPasswordVar),
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		cmd.SilenceUsage = true
-		v, _ := cmd.Flags().GetCount("verbose")
+		v, _ := cmd.Flags().GetCount(rootCmdVerboseFlag)
 		v = max(0, min(v, 2))
 		slog.SetDefault(slog.New(slog.NewTextHandler(cmd.ErrOrStderr(), &slog.HandlerOptions{AddSource: v >= 2, Level: map[int]slog.Level{
 			0: slog.LevelInfo,
@@ -37,18 +50,20 @@ var rootCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		slog.Info("startup", "debug", slog.Default().Enabled(context.Background(), slog.LevelDebug))
 
-		surehubEmail := os.Getenv("SUREHUB_EMAIL")
+		surehubEmail := os.Getenv(emailEnvVar)
 		if surehubEmail == "" {
-			return errors.New("SUREHUB_EMAIL is not set")
+			return fmt.Errorf("$%s is not set", emailEnvVar)
 		}
 
-		sureHubPassword := os.Getenv("SUREHUB_PASSWORD")
+		sureHubPassword := os.Getenv(emailPasswordVar)
 		if sureHubPassword == "" {
-			return errors.New("$SUREHUB_PASSWORD is not set")
+			return fmt.Errorf("$%s is not set", emailPasswordVar)
 		}
 
 		c, _ := client.NewClientWithResponses(defaultHubApi, client.WithHTTPClient(&http.Client{Timeout: time.Second * 30}))
-		p := poller.Poller{Client: c, Interval: time.Minute, HubEmail: surehubEmail, HubPassword: sureHubPassword}
+
+		interval, _ := cmd.Flags().GetDuration(rootCmdIntervalFlag)
+		p := poller.Poller{Client: c, Interval: interval, HubEmail: surehubEmail, HubPassword: sureHubPassword}
 		if err := p.Start(context.Background()); err != nil {
 			return err
 		}
@@ -99,14 +114,17 @@ var rootCmd = &cobra.Command{
 			return nil
 		})
 
-		slog.Info("starting webserver", "address", defaultAddress)
-		return e.Start(defaultAddress)
+		address, _ := cmd.Flags().GetString(rootCmdAddressFlag)
+		slog.Info("starting webserver", "address", address)
+		return e.Start(address)
 	},
 	SilenceErrors: true,
 }
 
 func init() {
-	rootCmd.PersistentFlags().CountP("verbose", "v", "Increase log verbosity and detail by specifying this flag one or more times")
+	rootCmd.PersistentFlags().CountP(rootCmdVerboseFlag, "v", "increase log verbosity and detail by specifying this flag one or more times")
+	rootCmd.Flags().String(rootCmdAddressFlag, defaultAddress, "the address to listen on")
+	rootCmd.Flags().Duration(rootCmdIntervalFlag, defaultInterval, "the interval to poll at")
 }
 
 func main() {
