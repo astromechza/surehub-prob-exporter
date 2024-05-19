@@ -6,7 +6,7 @@ I built this in order to pull data from my <https://www.surepetcare.com/en-gb/pe
 
 ![arrows](arrows.drawio.png)
 
-The container image is published to `ghcr.io/astromechza/surehub-prom-exporter:main`.
+The container image is published to `ghcr.io/astromechza/surehub-prom-exporter`. See <https://github.com/astromechza/surehub-prom-exporter/pkgs/container/surehub-prom-exporter> for releases.
 
 ### Usage
 
@@ -33,7 +33,11 @@ Flags:
 - `/alive` - liveness probe (is the web server running)
 - `/ready` - readiness probe (did the last surehub poll succeed)
 
-When deployed through the Score file to Kubernetes using `score-k8s` it is assumed that you have a secret named `surehub-credential` with `email` and `password` keys in it.
+### Deployment with Score
+
+**NOTE**: you don't have to deploy with Score! Do whatever you want with the image available.
+
+When deployed through the Score file to Kubernetes using [`score-k8s`](https://github.com/score-spec/score-k8s) it is assumed that you have a secret named `surehub-credential` with `email` and `password` keys in it.
 
 ```
 $ make clean manifests.yaml
