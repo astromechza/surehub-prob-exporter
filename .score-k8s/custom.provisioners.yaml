@@ -3,3 +3,27 @@
   outputs: |
     SUREHUB_EMAIL: {{ encodeSecretRef "surehub-credential" "email" }}
     SUREHUB_PASSWORD: {{ encodeSecretRef "surehub-credential" "password" }}
+
+- uri: template://custom/service-monitor
+  type: service-monitor
+  manifests: |
+    - apiVersion: monitoring.coreos.com/v1
+      kind: ServiceMonitor
+      metadata:
+        name: {{ .SourceWorkload }}
+        namespace: monitoring
+      spec:
+        namespaceSelector: {}
+        selector:
+          matchLabels:
+            app.kubernetes.io/name: {{ .SourceWorkload }}
+            app.kubernetes.io/managed-by: score-k8s
+        endpoints:
+          - port: {{ .Params.port }}
+            path: {{ .Params.path }}
+            relabelings:
+            - regex: pod
+              action: labeldrop
+            metricRelabelings:
+            - regex: instance
+              action: labeldrop

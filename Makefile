@@ -17,6 +17,12 @@ client/swagger.json:
 	jq '.paths."/api/auth/login".post.responses."200" |= {"content":{"application/json":{"schema":{"$$ref":"#/components/schemas/AuthLoginResponse"}}}} | .components.schemas.AuthLoginResponse |= {"type":"object","required":["data"],"properties":{"data":{"required":["user","token"],"properties":{"user":{"$$ref":"#/components/schemas/UserResource"},"token":{"type":"string"}}}}}' client/swagger.json > client/swagger.json.tmp
 	jq 'walk( if type=="object" and .format and .format == "int32" then del(.format) else . end )' client/swagger.json.tmp > client/swagger.json
 
+.score-k8s/state.yaml:
+	score-k8s init
+
+manifests.yaml: .score-k8s/state.yaml
+	score-k8s generate score.yaml
+
 # ------------------------------------------------------------------------------
 # PHONY TARGETS
 # ------------------------------------------------------------------------------
@@ -30,6 +36,12 @@ update-spec:
 	rm -fv client/swagger.json
 	$(MAKE) client/swagger.json
 
+## Generate code from the spec
 .PHONY: generate
 generate:
 	go generate ./...
+
+## Clean up temporary score files
+.PHONY: clean
+clean:
+	rm -rfv .score-k8s/state.yaml .score-k8s/zz-default.provisioners.yaml manifests.yaml

@@ -35,35 +35,17 @@ Flags:
 
 When deployed through the Score file to Kubernetes using `score-k8s` it is assumed that you have a secret named `surehub-credential` with `email` and `password` keys in it.
 
-### Prometheus service monitor
-
-If you are using the Prometheus operator, then you should also install a service monitor like:
-
-```yaml
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: surehub-prom-exporter
-  namespace: monitoring
-spec:
-  namespaceSelector:
-    matchNames:
-      - <namespace>
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: surehub-prom-exporter
-      app.kubernetes.io/managed-by: score-k8s
-  endpoints:
-    - port: web
-      path: /metrics
-      relabelings:
-      - regex: pod
-        action: labeldrop
-      metricRelabelings:
-      - regex: instance
-        action: labeldrop
 ```
+$ make clean manifests.yaml
+$ kubectl use-context blah
+$ kubectl create secret generic surehub-credential "--from-literal=email=....." "--from-literal=password=....." 
+$ kubectl apply -f manifests.yaml
+```
+
+When deploying through `score-compose`, you should create a custom provisioner file for:
+
+- `type=environment` with the `SUREHUB_EMAIL` and `SUREHUB_PASSWORD`
+- `type=service-monitor` with no outputs
 
 ### Example Prometheus metrics
 

@@ -32,3 +32,8 @@ service:
 resources:
   env:
     type: environment
+  monitor:
+    type: service-monitor
+    params:
+      port: web
+      path: /metrics
